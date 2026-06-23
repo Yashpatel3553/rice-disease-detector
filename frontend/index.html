@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RiceScan AI – Rice Leaf Disease Detector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --g50:#f0fdf0;--g100:#d1fad1;--g200:#a5f5a5;--g400:#4ade80;
+      --g600:#16a34a;--g700:#15803d;--g800:#166534;--g900:#14532d;
+      --bg:#f8fdf8;--card:#ffffff;--text:#1a2e1a;--muted:#5a7a5a;
+      --border:rgba(22,163,74,0.15);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+      background-image:radial-gradient(circle at 20% 10%,rgba(74,222,128,.08) 0%,transparent 50%),
+        radial-gradient(circle at 80% 80%,rgba(196,135,58,.06) 0%,transparent 50%);}
+    header{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 3rem;
+      border-bottom:1px solid var(--border);background:rgba(255,255,255,.85);backdrop-filter:blur(10px);
+      position:sticky;top:0;z-index:100;}
+    .logo{display:flex;align-items:center;gap:10px;}
+    .logo-icon{width:36px;height:36px;background:var(--g800);border-radius:10px;display:flex;
+      align-items:center;justify-content:center;font-size:20px;}
+    .logo-text{font-size:1.1rem;font-weight:700;color:var(--g800);letter-spacing:-.02em;}
+    nav a{color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;
+      margin-left:2rem;transition:color .2s;}
+    nav a:hover{color:var(--g700);}
+    .hero{text-align:center;padding:5rem 2rem 3rem;max-width:700px;margin:0 auto;}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:var(--g100);color:var(--g800);
+      font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;
+      border-radius:999px;margin-bottom:1.5rem;}
+    .badge-dot{width:6px;height:6px;background:var(--g600);border-radius:50%;animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+    h1{font-family:'DM Serif Display',serif;font-size:clamp(2.5rem,6vw,4rem);color:var(--g900);
+      line-height:1.1;margin-bottom:1rem;}
+    h1 em{font-style:italic;color:var(--g600);}
+    .hero p{font-size:1.05rem;color:var(--muted);line-height:1.7;margin-bottom:2rem;}
+    .stats-row{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;}
+    .stat{text-align:center;}
+    .stat-num{font-size:1.5rem;font-weight:700;color:var(--g800);}
+    .stat-label{font-size:.75rem;color:var(--muted);font-weight:500;}
+    main{max-width:1100px;margin:0 auto;padding:2rem 2rem 6rem;}
+    .detector-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:4rem;}
+    @media(max-width:768px){.detector-grid{grid-template-columns:1fr;}header{padding:1rem 1.5rem;}nav{display:none;}}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+    .panel-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+    .panel-icon{width:32px;height:32px;background:var(--g50);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+    .panel-title{font-weight:700;font-size:.9rem;letter-spacing:-.01em;}
+    .upload-area{padding:2rem;text-align:center;}
+    .drop-zone{border:2px dashed var(--g400);border-radius:16px;padding:3rem 2rem;cursor:pointer;
+      transition:all .25s;background:var(--g50);position:relative;}
+    .drop-zone:hover,.drop-zone.dragover{background:var(--g100);border-color:var(--g600);transform:scale(1.01);}
+    .drop-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .drop-icon{font-size:3rem;margin-bottom:.75rem;display:block;}
+    .drop-text{font-size:.95rem;color:var(--g800);font-weight:600;margin-bottom:.25rem;}
+    .drop-hint{font-size:.8rem;color:var(--muted);}
+    .preview-img{width:100%;max-height:280px;object-fit:contain;border-radius:12px;margin-bottom:1rem;display:none;}
+    .analyze-btn{width:100%;padding:.875rem;background:var(--g700);color:white;border:none;border-radius:12px;
+      font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;
+      margin-top:1rem;letter-spacing:.01em;display:none;}
+    .analyze-btn:hover{background:var(--g800);transform:translateY(-1px);}
+    .analyze-btn:disabled{background:var(--muted);cursor:not-allowed;transform:none;}
+    .change-btn{width:100%;padding:.7rem;background:transparent;color:var(--g700);border:1.5px solid var(--g400);border-radius:12px;
+      font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s;
+      margin-top:.6rem;letter-spacing:.01em;display:none;}
+    .change-btn:hover{background:var(--g50);border-color:var(--g600);}
+    .result-area{padding:2rem;}
+    .result-placeholder{text-align:center;padding:3rem 1rem;color:var(--muted);}
+    .result-placeholder span{font-size:2.5rem;display:block;margin-bottom:.75rem;}
+    .result-placeholder p{font-size:.875rem;}
+    .result-card{display:none;}
+    .disease-name{font-family:'DM Serif Display',serif;font-size:1.75rem;color:var(--g900);margin-bottom:.25rem;}
+    .confidence-row{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;}
+    .confidence-bar-wrap{flex:1;height:8px;background:var(--g100);border-radius:999px;overflow:hidden;}
+    .confidence-bar{height:100%;background:linear-gradient(90deg,var(--g400),var(--g600));border-radius:999px;width:0;transition:width 1s cubic-bezier(.4,0,.2,1);}
+    .confidence-pct{font-weight:700;font-size:.875rem;color:var(--g700);min-width:42px;text-align:right;}
+    .info-block{background:var(--g50);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;border-left:3px solid var(--g600);}
+    .info-block h4{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g700);margin-bottom:.4rem;}
+    .info-block p{font-size:.875rem;color:var(--text);line-height:1.6;}
+    .severity-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;
+      font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1rem;}
+    .severity-high{background:#fef2f2;color:#991b1b;}
+    .severity-medium{background:#fffbeb;color:#92400e;}
+    .severity-low{background:var(--g50);color:var(--g800);}
+    .all-probs{margin-top:1.25rem;}
+    .all-probs h4{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.75rem;}
+    .prob-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .prob-label{font-size:.8rem;width:130px;color:var(--text);font-weight:500;}
+    .prob-mini-bar{flex:1;height:5px;background:var(--g100);border-radius:999px;overflow:hidden;}
+    .prob-mini-fill{height:100%;background:var(--g400);border-radius:999px;transition:width 1.2s ease;}
+    .prob-pct{font-size:.75rem;color:var(--muted);min-width:38px;text-align:right;}
+    .loading-state{display:none;text-align:center;padding:3rem;}
+    .spinner{width:48px;height:48px;border:3px solid var(--g100);border-top-color:var(--g600);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .loading-state p{color:var(--muted);font-size:.875rem;}
+    .error-state{display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:1rem 1.25rem;color:#991b1b;font-size:.875rem;margin-top:1rem;}
+    .section-title{font-family:'DM Serif Display',serif;font-size:1.75rem;color:var(--g900);margin-bottom:.5rem;}
+    .section-sub{color:var(--muted);font-size:.9rem;margin-bottom:2rem;}
+    .disease-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.25rem;margin-bottom:4rem;}
+    .disease-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem;cursor:pointer;transition:all .2s;}
+    .disease-card:hover{border-color:var(--g400);transform:translateY(-2px);box-shadow:0 8px 24px rgba(22,163,74,.1);}
+    .dc-icon{font-size:2rem;margin-bottom:.75rem;}
+    .dc-name{font-weight:700;font-size:1rem;margin-bottom:.3rem;color:var(--g900);}
+    .dc-desc{font-size:.8rem;color:var(--muted);line-height:1.5;}
+    .dc-tag{display:inline-block;margin-top:.75rem;padding:3px 10px;border-radius:999px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
+    footer{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);}
+    .api-notice{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:1rem 1.25rem;font-size:.8rem;color:#92400e;margin-bottom:1.5rem;line-height:1.6;}
+    .api-notice strong{display:block;margin-bottom:.25rem;}
+    .api-notice a{color:#92400e;font-weight:700;}
+    .api-url-row{display:flex;gap:8px;align-items:center;margin-bottom:1.5rem;}
+    .api-url-input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Syne',sans-serif;font-size:.8rem;color:var(--text);background:var(--g50);}
+    .api-save-btn{padding:8px 16px;background:var(--g700);color:white;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;}
+    .api-save-btn:hover{background:var(--g800);}
+    .saved-ok{color:#166534;font-size:.8rem;font-weight:600;display:none;}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌾</div>
+    <span class="logo-text">RiceScan AI</span>
+  </div>
+  <nav>
+    <a href="#detector">Detector</a>
+    <a href="#diseases">Diseases</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="badge"><div class="badge-dot"></div>MobileNetV2 · 99.9% Accuracy</div>
+  <h1>Detect Rice Leaf<br/><em>Diseases Instantly</em></h1>
+  <p>Upload a photo of a rice leaf and our AI model identifies Bacterial Blight, Blast, Brown Spot, or Tungro — trained on 5,932 real field images.</p>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">5,932</div><div class="stat-label">Training Images</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-label">Disease Classes</div></div>
+    <div class="stat"><div class="stat-num">99.9%</div><div class="stat-label">Accuracy</div></div>
+    <div class="stat"><div class="stat-num">&lt;2s</div><div class="stat-label">Prediction Time</div></div>
+  </div>
+</section>
+
+<main>
+  <section id="detector">
+    <div class="api-notice">
+      <strong>⚙️ Backend API setup required</strong>
+      Deploy the FastAPI backend (see README.md) then paste your API URL below. Free hosting at <a href="https://render.com" target="_blank">Render.com</a>.
+    </div>
+    <div class="api-url-row">
+      <input type="text" class="api-url-input" id="apiUrlInput" placeholder="https://ricescan-api.onrender.com" />
+      <button class="api-save-btn" onclick="saveApiUrl()">Save</button>
+      <span class="saved-ok" id="savedOk">✓ Saved!</span>
+    </div>
+
+    <div class="detector-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon">📤</div>
+          <span class="panel-title">Upload Rice Leaf Image</span>
+        </div>
+        <div class="upload-area">
+          <div class="drop-zone" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*" />
+            <span class="drop-icon">🌿</span>
+            <p class="drop-text">Drop image here or click to browse</p>
+            <p class="drop-hint">JPG, PNG, WEBP · Max 10MB</p>
+          </div>
+          <img id="previewImg" class="preview-img" src="" alt="Preview" />
+          <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImage()">🔍 Analyze Disease</button>
+          <button class="change-btn" id="changeBtn" onclick="changePhoto()">↺ Choose a Different Photo</button>
+          <div class="error-state" id="errorState"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon">🧬</div>
+          <span class="panel-title">Diagnosis Result</span>
+        </div>
+        <div class="result-area">
+          <div class="result-placeholder" id="resultPlaceholder">
+            <span>🔬</span>
+            <p>Upload and analyze a rice leaf<br/>to see the diagnosis here.</p>
+          </div>
+          <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p>Analyzing leaf patterns…</p>
+          </div>
+          <div class="result-card" id="resultCard">
+            <div class="severity-badge" id="severityBadge"></div>
+            <div class="disease-name" id="diseaseName">—</div>
+            <div class="confidence-row">
+              <div class="confidence-bar-wrap"><div class="confidence-bar" id="confBar"></div></div>
+              <span class="confidence-pct" id="confPct">—</span>
+            </div>
+            <div class="info-block"><h4>Description</h4><p id="diseaseDesc">—</p></div>
+            <div class="info-block"><h4>🌿 Recommended Treatment</h4><p id="diseaseTreat">—</p></div>
+            <div class="all-probs">
+              <h4>All Class Probabilities</h4>
+              <div id="probRows"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="diseases">
+    <h2 class="section-title">Detectable Diseases</h2>
+    <p class="section-sub">Our model identifies 4 major rice leaf diseases from the Mendeley dataset</p>
+    <div class="disease-cards">
+      <div class="disease-card">
+        <div class="dc-icon">🦠</div>
+        <div class="dc-name">Bacterial Blight</div>
+        <div class="dc-desc">Water-soaked lesions along leaf edges turning yellow then white-grey. Caused by Xanthomonas oryzae. 20–30% yield loss if untreated.</div>
+        <span class="dc-tag severity-high">High Risk</span>
+      </div>
+      <div class="disease-card">
+        <div class="dc-icon">💨</div>
+        <div class="dc-name">Blast</div>
+        <div class="dc-desc">Diamond-shaped lesions with grey centres and brown margins. Caused by Magnaporthe oryzae fungus. Most damaging rice disease globally.</div>
+        <span class="dc-tag severity-high">High Risk</span>
+      </div>
+      <div class="disease-card">
+        <div class="dc-icon">🟤</div>
+        <div class="dc-name">Brown Spot</div>
+        <div class="dc-desc">Circular to oval brown spots with yellow halo. Caused by Cochliobolus miyabeanus. Common in nutrient-poor, drought-stressed soils.</div>
+        <span class="dc-tag severity-medium">Medium Risk</span>
+      </div>
+      <div class="disease-card">
+        <div class="dc-icon">🌀</div>
+        <div class="dc-name">Tungro</div>
+        <div class="dc-desc">Yellow-orange discolouration, stunted growth. Viral disease spread by green leafhoppers. Causes severe tillering reduction.</div>
+        <span class="dc-tag severity-high">High Risk</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <h2 class="section-title">About This Model</h2>
+    <p class="section-sub">MobileNetV2 transfer learning trained on Mendeley Rice Leaf Disease dataset</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+      <div class="info-block"><h4>Architecture</h4><p>MobileNetV2 with custom head — 2.26M parameters, optimised for fast mobile inference</p></div>
+      <div class="info-block"><h4>Dataset</h4><p>5,932 images across 4 classes from Mendeley Data, augmented with rotation, flipping, and zoom</p></div>
+      <div class="info-block"><h4>Performance</h4><p>99.9% test accuracy and F1-score. Trained in 94 seconds on Kaggle GPU environment</p></div>
+      <div class="info-block"><h4>Explainability</h4><p>Grad-CAM heatmaps verify model correctly focuses on diseased leaf regions</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>RiceScan AI · MobileNetV2 · Dataset: Mendeley Rice Leaf Disease Images · Built from Kaggle Notebook</p>
+</footer>
+
+<script>
+const DISEASE_INFO = {
+  "Bacterialblight":{label:"Bacterial Blight",severity:"high",
+    desc:"Bacterial blight causes water-soaked, yellow-edged lesions along leaf margins that spread inward. Caused by Xanthomonas oryzae pv. oryzae. Can cause 20–30% yield loss if untreated.",
+    treat:"Apply copper-based bactericides or streptomycin. Improve field drainage. Use resistant varieties like IR64 or IR72. Avoid excessive nitrogen fertilisation."},
+  "Blast":{label:"Blast",severity:"high",
+    desc:"Rice blast is the most damaging fungal disease globally. Produces diamond-shaped lesions with grey-white centres and brown borders. Attacks leaves, nodes, and panicles.",
+    treat:"Apply tricyclazole or isoprothiolane fungicide. Ensure proper field drainage. Avoid dense planting. Use blast-resistant certified seeds."},
+  "Brownspot":{label:"Brown Spot",severity:"medium",
+    desc:"Brown spot appears as circular to oval brown lesions with a yellow halo. Caused by Cochliobolus miyabeanus. Associated with nutrient-deficient soils and drought stress.",
+    treat:"Apply iprodione or propiconazole fungicide. Improve soil nutrition with balanced NPK. Ensure adequate water supply during crop cycle."},
+  "Tungro":{label:"Tungro Virus",severity:"high",
+    desc:"Rice Tungro Disease is caused by two viruses transmitted by green leafhoppers. Infected plants show yellow-orange leaves and severe stunting with reduced tillering.",
+    treat:"Control green leafhopper vector with imidacloprid. Remove and destroy infected plants. Plant early in the season. Use Tungro-resistant varieties."}
+};
+
+let selectedFile = null;
+let apiBaseUrl = localStorage.getItem('ricescan_api_url') || '';
+document.getElementById('apiUrlInput').value = apiBaseUrl;
+
+function saveApiUrl() {
+  const val = document.getElementById('apiUrlInput').value.trim().replace(/\/$/,'');
+  apiBaseUrl = val;
+  localStorage.setItem('ricescan_api_url', val);
+  const ok = document.getElementById('savedOk');
+  ok.style.display = 'inline';
+  setTimeout(() => ok.style.display='none', 2000);
+}
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('previewImg');
+    img.src = e.target.result; img.style.display='block';
+    document.getElementById('analyzeBtn').style.display='block';
+    document.getElementById('changeBtn').style.display='block';
+    document.getElementById('dropZone').style.display='none';
+  };
+  reader.readAsDataURL(file);
+  resetResult();
+  document.getElementById('errorState').style.display='none';
+}
+
+function changePhoto() {
+  selectedFile = null;
+  fileInput.value = '';
+  document.getElementById('previewImg').style.display='none';
+  document.getElementById('analyzeBtn').style.display='none';
+  document.getElementById('changeBtn').style.display='none';
+  document.getElementById('dropZone').style.display='block';
+  resetResult();
+  document.getElementById('errorState').style.display='none';
+}
+
+function resetResult() {
+  document.getElementById('resultPlaceholder').style.display='block';
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('confBar').style.width='0';
+}
+
+async function analyzeImage() {
+  if (!selectedFile) return;
+  if (!apiBaseUrl) { showError('Please enter and save your backend API URL above.'); return; }
+  document.getElementById('resultPlaceholder').style.display='none';
+  document.getElementById('loadingState').style.display='block';
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('errorState').style.display='none';
+  document.getElementById('analyzeBtn').disabled=true;
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+  try {
+    const resp = await fetch(`${apiBaseUrl}/predict`, { method:'POST', body:fd });
+    if (!resp.ok) { const e=await resp.json().catch(()=>({})); throw new Error(e.detail||`Server error: ${resp.status}`); }
+    const data = await resp.json();
+    showResult(data);
+  } catch(err) {
+    document.getElementById('loadingState').style.display='none';
+    document.getElementById('resultPlaceholder').style.display='block';
+    showError('Error: '+err.message+'. Make sure your API is running and CORS is enabled.');
+  } finally { document.getElementById('analyzeBtn').disabled=false; }
+}
+
+function showResult(data) {
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('resultCard').style.display='block';
+  const cls = data.predicted_class;
+  const conf = (data.confidence*100).toFixed(1);
+  const info = DISEASE_INFO[cls] || {label:cls,severity:'medium',desc:'No details.',treat:'Consult an agronomist.'};
+  document.getElementById('diseaseName').textContent = info.label;
+  document.getElementById('confPct').textContent = conf+'%';
+  document.getElementById('diseaseDesc').textContent = info.desc;
+  document.getElementById('diseaseTreat').textContent = info.treat;
+  const badge = document.getElementById('severityBadge');
+  badge.textContent = info.severity==='high' ? '⚠️ High Severity' : info.severity==='medium' ? '⚡ Medium Severity' : '✅ Low Severity';
+  badge.className = `severity-badge severity-${info.severity}`;
+  setTimeout(() => { document.getElementById('confBar').style.width = conf+'%'; }, 100);
+  const rows = document.getElementById('probRows');
+  rows.innerHTML='';
+  const probs = data.all_probabilities || {};
+  Object.entries(probs).sort((a,b)=>b[1]-a[1]).forEach(([c,p]) => {
+    const pct=(p*100).toFixed(1);
+    const lbl=(DISEASE_INFO[c]||{label:c}).label;
+    rows.innerHTML+=`<div class="prob-row"><span class="prob-label">${lbl}</span><div class="prob-mini-bar"><div class="prob-mini-fill" style="width:${pct}%"></div></div><span class="prob-pct">${pct}%</span></div>`;
+  });
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorState');
+  el.textContent = msg; el.style.display='block';
+}
+</script>
+</body>
+</html>

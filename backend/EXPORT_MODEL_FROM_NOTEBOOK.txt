@@ -1,0 +1,20 @@
+# Add this cell to your Colab/Kaggle notebook AFTER training mobilenet_model
+# It saves the model in a format the FastAPI backend can load directly.
+
+# ---- PASTE THIS AS A NEW CELL IN YOUR NOTEBOOK ----
+
+mobilenet_model.save("mobilenet_rice.h5")
+print("Model saved as mobilenet_rice.h5")
+
+# If on Kaggle, download it from the Output panel on the right side of the
+# notebook after running this cell (it will appear under /kaggle/working/).
+#
+# If on Colab, run this in the next cell to trigger a download:
+#
+# from google.colab import files
+# files.download("mobilenet_rice.h5")
+
+# ---- THEN ----
+# 1. Take the downloaded mobilenet_rice.h5 file
+# 2. Place it inside: rice-disease-detector/backend/model/mobilenet_rice.h5
+# 3. Continue with backend deployment steps in README.md
