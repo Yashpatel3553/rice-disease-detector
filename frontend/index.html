@@ -143,11 +143,11 @@
 
 <main>
   <section id="detector">
-    <div class="api-notice">
+    <div class="api-notice" style="display:none;">
       <strong>⚙️ Backend API setup required</strong>
       Deploy the FastAPI backend (see README.md) then paste your API URL below. Free hosting at <a href="https://render.com" target="_blank">Render.com</a>.
     </div>
-    <div class="api-url-row">
+    <div class="api-url-row" style="display:none;">
       <input type="text" class="api-url-input" id="apiUrlInput" placeholder="https://ricescan-api.onrender.com" />
       <button class="api-save-btn" onclick="saveApiUrl()">Save</button>
       <span class="saved-ok" id="savedOk">✓ Saved!</span>
@@ -269,8 +269,9 @@ const DISEASE_INFO = {
     treat:"Control green leafhopper vector with imidacloprid. Remove and destroy infected plants. Plant early in the season. Use Tungro-resistant varieties."}
 };
 
+const DEFAULT_API_URL = 'https://rice-disease-detector-ckal.onrender.com';
 let selectedFile = null;
-let apiBaseUrl = localStorage.getItem('ricescan_api_url') || '';
+let apiBaseUrl = localStorage.getItem('ricescan_api_url') || DEFAULT_API_URL;
 document.getElementById('apiUrlInput').value = apiBaseUrl;
 
 function saveApiUrl() {
